@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# add executable
+add_executable(paralelni_algoritmy_i project_1/srflp.cpp)
+
 # Compiler flags
 if (CMAKE_CXX_COMPILER_ID EQUAL "GNU")
     target_compile_options(paralelni_algoritmy_i PRIVATE -Wall -Wextra -Wpedantic -Werror)
