@@ -23,12 +23,12 @@ Jinými slovy, PR vrcholu ***u*** odpovídá součtu příspěvků PR ze všech 
 příčemž každý "donor" rozděluje své PR rovnoměrně mezi všechny vrcholy, ke kterým z něj vede hrana.
 
 Takto definovaný výpočet PR je rekurzivní. Pro první iteraci inicializujeme PR všech vrcholů na stejnou hodnotu,
-odpovídající $ \frac{1}{|V|} $. Poté opakujeme výpočet PR pro všechny vrcholy v grafu dokud se jeho hodnota
+odpovídající $\frac{1}{|V|}$. Poté opakujeme výpočet PR pro všechny vrcholy v grafu dokud se jeho hodnota
 nestabilizuje (tj. změna PR pro jednotlivé vrcholy není menší než předem daný threshold).
 
 Prakticky lze provést výpočet PR mnoha způsoby. Ukázali jsme si data-driven přístup (v každé iteraci přepočítáme PR pro
 všechny vrcholy v grafu) a topology-driven přístup (v každé iteraci spočítáme PR jen pro ty vrcholy, u kterých došlo ke
-změně PR u některého z donorů,$ v \in N^-(u)) $. Je totiž zřejmé, že pokud se nezměnil PR žádného donora, nebude
+změně PR u některého z donorů, $v \in N^-(u))$. Je totiž zřejmé, že pokud se nezměnil PR žádného donora, nebude
 se měnit ani PR ***u***. Paralelizace obou přístupů je vcelku triviální.
 
 Klíčovým aspektem výpočtu PR je vhodná reprezentace grafu a znalost $N^-(u))$ a $|N^+(u)|$  pro každý
