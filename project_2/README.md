@@ -17,8 +17,8 @@ Obrázek 1: příklad AP
 ## Princip AP lze popsat v několika krocích:
 
 1. AP vychází z matice podobnosti, *S*, která reprezentuje podobnost mezi dvojicemi bodů $x_i, x_j$. Podobnost lze
-   vypočítat jako zápornou hodnoty čtverce vzdálenosti,$S(i,j) = -||x_i - x_j||^2$. Jinými slovy, pro
-   d-dimenzionální body je výpočet: $S(i,j) = - \sum_{k=1}^{d}{(x_i[k] - x_j[k])}^2$. Zvláštní roli mají hodnoty
+   vypočítat jako zápornou hodnoty čtverce vzdálenosti, $$S(i,j) = -||x_i - x_j||^2.$$ Jinými slovy, pro
+   d-dimenzionální body je výpočet: $$S(i,j) = - \sum_{k=1}^{d}{(x_i[k] - x_j[k])}^2.$$ Zvláštní roli mají hodnoty
    na diagonále *S*. Ty nastavíme na medián hodnot podobností (zdůvodnění najdete
    např. [zde](https://www.geeksforgeeks.org/affinity-propagation-in-ml-to-find-the-number-of-clusters/)).
 
