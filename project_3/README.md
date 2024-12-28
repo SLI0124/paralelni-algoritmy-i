@@ -31,8 +31,8 @@ všechny vrcholy v grafu) a topology-driven přístup (v každé iteraci spočí
 změně PR u některého z donorů, $v \in N^-(u))$. Je totiž zřejmé, že pokud se nezměnil PR žádného donora, nebude
 se měnit ani PR ***u***. Paralelizace obou přístupů je vcelku triviální.
 
-Klíčovým aspektem výpočtu PR je vhodná reprezentace grafu a znalost $N^-(u))$ a $|N^+(u)|$  pro každý
-vrchol.Graf můžeme snadno reprezentovat pomocí matice sousednosti. Tedy matice, která bude mít stejný
+Klíčovým aspektem výpočtu PR je vhodná reprezentace grafu a znalost $N^-(u))$ a $|N^+(u)|$ pro každý
+vrchol. Graf můžeme snadno reprezentovat pomocí matice sousednosti. Tedy matice, která bude mít stejný
 opočet řádků a sloupců (roven ***|V|***) a na pozici ***ij*** hodnotu 1 pokud vede z ***i*** do ***j*** hrana a 0 pokud
 ne. Je jasné, že matice sousednosti bude pro velké grafy s desítkami či stovkami tisíc vrcholů řídká, je
 jí proto třeba reprezentovat jako přídkou matici. Reprezentace klasickou hustou maticí by i pro relativně malé grafy
