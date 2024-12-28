@@ -16,11 +16,11 @@ neefektivní (bude se často přesunovat po dlouhé dráze mezi m1 a m4). Navíc
 ![Obrázek 1](https://homel.vsb.cz/~kro080/PAI-2024/U1/srflp-2.png)
 
 Matematicky lze základní verzi SRFLP formulovat následujícím způsobem: mějme množinu zařízení,
-$$F = {1, 2, ..., n}$$ se známou šířkou, $$L = {l_1, l_2, ..., l_n}$$. Dále mějme
+$$F = {1, 2, ..., n}$$ se známou šířkou, $$L = {l_1, l_2, ..., l_n}.$$ Dále mějme
 matici $$C = (c_{ij}) \in R^{n \times n}$$ s váhami přechodů mezi zařízením  ***i*** a  ***j***. Tu si můžeme
 představit jako odhad pravděpodobnosti, že rameno bude z pozice ***i*** budepředcházet pozici ***j***.
 
-Cílem řešení SRFLP je najít lineární uspořádání (=permutaci) zařízení $$\pi = (\pi_1, \pi_2, ..., \pi_n)$$, která
+Cílem řešení SRFLP je najít lineární uspořádání (=permutaci) zařízení $$\pi = (\pi_1, \pi_2, ..., \pi_n),$$ která
 bude minimalizovat následující cenovou funkci:
 
 $$ \min_{\underset{\pi \in S_n}{}} f_{SRFLP}(\pi),$$
@@ -45,11 +45,11 @@ Konkrétní problém, který chceme řešit (instanci SRFLP) lze popsat např. t
 12. 0 0 0 0 0 0 0 0 0 0
 
 Význam řádků na obr. 2 je následující: řádek (1) obsahuje dimenzi problému, t.j. počet zařízení (***n***). Řádek (2)
-obsahuje šířky zařízení, $$l_1, l_2, ..., l_n$$.
+obsahuje šířky zařízení, $$l_1, l_2, ..., l_n.$$
 
 V případě této instance mají všechna zařízení shodnou šířku 1. řádky (3) - (12) pak obsahují matici  ***C***, tj. váhy
-přechodů mezi zařízeními, $$c_{ij}$$. Dolní část matice je naplněna nulami, vzhledem k tomu, že je problém
-symetrický, $$c_{ij} = c_{ji}$$, představme si tam stejné hodnoty jako nad hlavní diagonálou. Na základě toho
+přechodů mezi zařízeními, $$c_{ij}.$$ Dolní část matice je naplněna nulami, vzhledem k tomu, že je problém
+symetrický, $$c_{ij} = c_{ji},$$ představme si tam stejné hodnoty jako nad hlavní diagonálou. Na základě toho
 všecho tedy můžeme
 zformulovat následující zadání prvního úkolu.
 
