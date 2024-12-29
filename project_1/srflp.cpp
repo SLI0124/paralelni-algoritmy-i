@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -74,8 +75,85 @@ unsigned long long calculate_cost(const std::vector<int> &permutation,
 }
 
 
-void branch_and_bound() {
-    // TODO: Finally understand what the hell is required here and what to do and parallelize it
+/**
+ * Calculate the cost of a permutation between the faculties based on the given matrix and sizes.
+ *
+ * This function computes the cost of a given permutation of faculties. The cost is calculated
+ * based on the weights between pairs of faculties and the distances between them. The distance
+ * is determined by the sizes of the faculties and the order in the permutation.
+ *
+ * @param faculties_sizes The sizes of the faculties.
+ * @param weights_matrix The matrix containing the weights of the edges between the faculties.
+ */
+void parallel_brute_force(const std::vector<int> &faculties_sizes,
+                          const std::vector<std::vector<int> > &weights_matrix) {
+    // Initialize the base permutation with indices 0 to faculties_sizes.size() - 1
+    std::vector<int> base_permutation(faculties_sizes.size());
+    for (int i = 0; i < faculties_sizes.size(); i++) {
+        base_permutation[i] = i;
+    }
+
+    // Generate all permutations of the base permutation, nice little function from the ranges library shown in class
+    std::vector<std::vector<int> > all_permutations;
+    all_permutations.push_back(base_permutation); // don't forget to add the base permutation
+    while (std::ranges::next_permutation(base_permutation).found) {
+        all_permutations.push_back(base_permutation);
+    }
+
+    const size_t total_permutations = all_permutations.size();
+    std::cout << "Total permutations: " << total_permutations << std::endl;
+    const size_t chunk_size = total_permutations / std::thread::hardware_concurrency();
+    std::cout << "Chunk size: " << chunk_size << std::endl;
+
+    // Initialize the best cost to the maximum value
+    unsigned long long best_cost = std::numeric_limits<unsigned long long>::max();
+    std::vector<int> best_permutation; // Initialize the best permutation to an empty vector
+
+    // Create threads to calculate the cost of permutations in parallel
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < std::thread::hardware_concurrency(); i++) {
+        threads.emplace_back(
+            /*
+             * i: The index of the thread. Used to determine the start and end of the chunk.
+             * chunk_size: The size of the chunk assigned to the thread.
+             * all_permutations: The vector containing all permutations.
+             * faculties_sizes: The sizes of the faculties.
+             * weights_matrix: The matrix containing the weights of the edges between the faculties.
+             * best_cost: The best cost found so far. Updated if a better cost is found.
+             * best_permutation: The best permutation found so far. Updated if a better permutation is found.
+             */
+            [i, chunk_size, &all_permutations, &faculties_sizes, &weights_matrix, &best_cost, &best_permutation]() {
+                const size_t start = i * chunk_size; // Calculate the start of the assigned chunk
+                size_t end = (i + 1) * chunk_size; // Calculate the end of the assigned chunk
+                // Adjust the end for the last thread
+                if (i == std::thread::hardware_concurrency() - 1) {
+                    end = all_permutations.size(); // The last thread gets the remaining permutations
+                }
+
+                // Calculate the cost for each permutation in the assigned chunk
+                for (size_t j = start; j < end; ++j) {
+                    const unsigned long long cost = // Calculate the cost of the permutation
+                            calculate_cost(all_permutations[j], weights_matrix, faculties_sizes);
+                    // Update the best cost and permutation if a better cost is found
+                    if (cost < best_cost) {
+                        best_cost = cost; // Update the best cost
+                        best_permutation = all_permutations[j]; // Update the best permutation
+                    }
+                }
+            });
+    }
+
+    std::cout << std::endl << "Threads created" << std::endl << std::endl;
+    for (auto &thread: threads) {
+        // Wait for all threads to finish
+        thread.join();
+    }
+
+    std::cout << "Best cost: " << best_cost << std::endl;
+    std::cout << "Best permutation: ";
+    for (const auto &elem: best_permutation) {
+        std::cout << elem << " ";
+    }
 }
 
 
@@ -104,7 +182,7 @@ int main() {
         }
     }
 
-    branch_and_bound(faculties_sizes, weights_matrix);
+    parallel_brute_force(faculties_sizes, weights_matrix);
 
     return 0;
 }
