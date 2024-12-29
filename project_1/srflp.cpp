@@ -104,50 +104,7 @@ int main() {
         }
     }
 
-    std::cout << "Number of rows and columns: " << number_of_rows << std::endl;
-    std::cout << "Sizes: ";
-    for (const auto &s: faculties_sizes) {
-        std::cout << s << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Matrix:" << std::endl;
-    for (const auto &row: weights_matrix) {
-        for (const auto &elem: row) {
-            std::cout << elem << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    unsigned int worker_count = std::thread::hardware_concurrency();
-    std::cout << "Number of threads: " << worker_count << std::endl;
-
-    unsigned int total_permutations = 1;
-    for (unsigned int i = 1; i <= number_of_rows; ++i) {
-        total_permutations *= i;
-    }
-    std::cout << "Total permutations: " << total_permutations << std::endl;
-    unsigned int chunk_size = total_permutations / worker_count;
-    std::cout << "Chunk size: " << chunk_size << std::endl;
-
-    // Test the cost calculation
-    {
-        std::vector<int> test_permutation = {6, 5, 4, 3, 2, 1, 0, 7, 8, 9};
-        unsigned long long test_cost = calculate_cost(test_permutation, weights_matrix, faculties_sizes);
-        std::cout << "Test cost: " << test_cost << std::endl;
-
-        std::vector<int> allegedly_best_permutation = {0, 4, 1, 9, 6, 3, 7, 2, 5, 8};
-        unsigned long long allegedly_best_cost =
-                calculate_cost(allegedly_best_permutation, weights_matrix, faculties_sizes);
-        std::cout << "Allegedly best cost: " << allegedly_best_cost << std::endl;
-
-        // revert the order of the faculties - they should gave the same cost
-        std::vector<int> allegedly_best_permutation_reversed = allegedly_best_permutation;
-        std::reverse(allegedly_best_permutation_reversed.begin(), allegedly_best_permutation_reversed.end());
-        unsigned long long allegedly_best_cost_reversed =
-                calculate_cost(allegedly_best_permutation_reversed, weights_matrix, faculties_sizes);
-        std::cout << "Allegedly best cost reversed: " << allegedly_best_cost_reversed << std::endl;
-    }
+    branch_and_bound(faculties_sizes, weights_matrix);
 
     return 0;
 }
