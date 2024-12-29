@@ -7,9 +7,14 @@
 
 
 /**
- * Load a file and return its content as a vector of strings
- * @param filename Name of the file to load
- * @return A vector of strings containing the lines of the file
+ * Load a file and return its content as a vector of strings.
+ *
+ * This function opens a file with the given filename, reads its content line by line,
+ * and stores each line in a vector of strings. If the file cannot be opened, an error
+ * message is printed to the standard error stream, and an empty vector is returned.
+ *
+ * @param filename The name of the file to load.
+ * @return A vector of strings containing the lines of the file.
  */
 std::vector<std::string> load_file(const std::string &filename) {
     std::vector<std::string> data;
@@ -31,38 +36,41 @@ std::vector<std::string> load_file(const std::string &filename) {
 
 
 /**
- * Calculate the cost of a permutation between the faculties based on the given matrix and sizes
- * @param permutation The permutation of the faculties
- * @param weights_matrix The matrix containing the weights of the edges between the faculties
- * @param sizes The sizes of the faculties
- * @return The cost of the permutation - unsigned long long to avoid overflow and mostly .clang-tidy warnings
+ * Calculate the cost of a permutation between the faculties based on the given matrix and sizes.
+ *
+ * This function computes the cost of a given permutation of faculties. The cost is calculated
+ * based on the weights between pairs of faculties and the distances between them. The distance
+ * is determined by the sizes of the faculties and the order in the permutation.
+ *
+ * @param permutation The permutation of the faculties.
+ * @param weights_matrix The matrix containing the weights of the edges between the faculties.
+ * @param faculty_sizes The sizes of the faculties.
+ * @return The cost of the permutation as an unsigned long long to avoid overflow.
  */
 unsigned long long calculate_cost(const std::vector<int> &permutation,
                                   const std::vector<std::vector<int> > &weights_matrix,
-                                  const std::vector<int> &sizes) {
+                                  const std::vector<int> &faculty_sizes) {
     unsigned long long cost = 0;
 
-    // Calculate the cost of the permutation based on the given matrix and sizes - calculation is in project description
+    // Iterate over each pair of faculties in the permutation
     for (size_t i = 0; i < permutation.size(); i++) {
         for (size_t j = i + 1; j < permutation.size(); j++) {
-            const int faculty_1 = permutation[i];
-            const int faculty_2 = permutation[j];
-            // Get the weight of the edge between the two faculties, we want to use the upper triangular matrix to avoid
-            // the zero values since we only get one side of the matrix
-            const unsigned long long weight = (faculty_1 < faculty_2)
-                                                  ? weights_matrix[faculty_1][faculty_2]
-                                                  : weights_matrix[faculty_2][faculty_1];
+            // Determine the two faculties in the pair, get the upper triangle of the matrix since we have data there
+            const int faculty_1 = std::min(permutation[i], permutation[j]);
+            const int faculty_2 = std::max(permutation[i], permutation[j]);
+            // Get the weight between the two faculties
+            const unsigned long long weight = weights_matrix[faculty_1][faculty_2];
 
-            // function to calculate distance d of two faculties in permutation formula
-            int distance = (sizes[faculty_1] + sizes[faculty_2]) / 2; // fractional part of the formula
-            for (unsigned long long k = std::min(i, j) + 1; k < std::max(i, j); ++k) {
-                distance += sizes[permutation[k]]; // sum part of the formula
+            // Calculate the distance between the two faculties
+            int distance = (faculty_sizes[faculty_1] + faculty_sizes[faculty_2]) / 2;
+            for (size_t k = i + 1; k < j; ++k) {
+                distance += faculty_sizes[permutation[k]];
             }
-            // function SRFLP of permutation formula - sum of all (c * d) values
+            // Add the weighted distance to the total cost
             cost += weight * distance;
         }
     }
-    return cost; // return the calculated cost of the permutation
+    return cost;
 }
 
 
