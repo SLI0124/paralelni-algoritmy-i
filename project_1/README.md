@@ -25,9 +25,9 @@ bude minimalizovat následující cenovou funkci:
 
 $$ \min_{\underset{\pi \in S_n}{}} f_{SRFLP}(\pi),$$
 
-$$ f_{SRFLP} (\pi) = \sum_{1 \leq i < j \leq n} [c_{\pi_{i}\pi_i \cdot d(\pi_{i}, \pi_{j}}], $$
+$$ f_{SRFLP} (\pi) = \sum_{1 \leq i < j \leq n} [c_{\pi_{i}\pi_i \cdot d(\pi_{i}, \pi_{j})}], $$
 
-$$ d(\pi_{i}, \pi_{j}) = \frac{l_{\pi_{i}} + l_{\pi_{j}}}{2} + \sum_{i \leq i \leq\ j} l_{\pi_k}. $$
+$$ d(\pi_{i}, \pi_{j}) = \frac{l_{\pi_{i}} + l_{\pi_{j}}}{2} + \sum_{i \leq k \leq\ j} l_{\pi_k}. $$
 
 Konkrétní problém, který chceme řešit (instanci SRFLP) lze popsat např. takto:
 
