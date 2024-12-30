@@ -40,6 +40,24 @@ std::vector<std::vector<double> > tokenize_csv(const std::vector<std::string> &d
     return result;
 }
 
+void print_matrix(const std::vector<std::vector<double> > &matrix, const std::string &name) {
+    std::cout << name << std::endl;
+
+    if (matrix.empty()) {
+        std::cout << "Empty matrix" << std::endl;
+        return;
+    }
+
+    for (const auto &row: matrix) {
+        for (const auto &element: row) {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+
 std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<std::vector<double> > &data) {
     const size_t size_n = data.size();
     const std::vector<double> row(size_n, 0);
