@@ -1,0 +1,2 @@
+project_2/five_participants filter=lfs diff=lfs merge=lfs -text
+project_2/mnist/* filter=lfs diff=lfs merge=lfs -text
