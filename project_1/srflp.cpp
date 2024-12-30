@@ -6,16 +6,15 @@
 #include <sstream>
 #include <thread>
 
-
 /**
- * Load a file and return its content as a vector of strings.
+ * Load the content of a file into a vector of strings.
  *
- * This function opens a file with the given filename, reads its content line by line,
- * and stores each line in a vector of strings. If the file cannot be opened, an error
- * message is printed to the standard error stream, and an empty vector is returned.
+ * Opens the specified file and reads it line by line, storing each line
+ * in a vector. If the file cannot be opened, an error is logged to stderr,
+ * and an empty vector is returned.
  *
- * @param filename The name of the file to load.
- * @return A vector of strings containing the lines of the file.
+ * @param filename The name or path of the file to read.
+ * @return A vector containing each line of the file as a string.
  */
 std::vector<std::string> load_file(const std::string &filename) {
     std::vector<std::string> data;
@@ -35,59 +34,58 @@ std::vector<std::string> load_file(const std::string &filename) {
     return data;
 }
 
-
 /**
- * Calculate the cost of a permutation between the faculties based on the given matrix and sizes.
+ * Compute the cost of a permutation of faculties based on the weight matrix.
  *
- * This function computes the cost of a given permutation of faculties. The cost is calculated
- * based on the weights between pairs of faculties and the distances between them. The distance
- * is determined by the sizes of the faculties and the order in the permutation.
+ * This function calculates the total weighted distance between pairs of faculties
+ * arranged in a given permutation. The cost reflects the importance of placing
+ * related faculties closer together.
  *
- * @param permutation The permutation of the faculties.
- * @param weights_matrix The matrix containing the weights of the edges between the faculties.
- * @param faculty_sizes The sizes of the faculties.
- * @return The cost of the permutation as an unsigned long long to avoid overflow.
+ * @param permutation A vector representing the permutation of faculties.
+ * @param weights_matrix A square matrix where element [i][j] represents the weight between faculties i and j.
+ * @param faculty_sizes A vector representing the size of each faculty.
+ * @return The total cost as an unsigned long long to handle large values.
  */
 unsigned long long calculate_cost(const std::vector<int> &permutation,
                                   const std::vector<std::vector<int> > &weights_matrix,
                                   const std::vector<int> &faculty_sizes) {
     unsigned long long cost = 0;
 
-    // Iterate over each pair of faculties in the permutation
+    // Calculate pairwise cost by iterating over the permutation
     for (size_t i = 0; i < permutation.size(); i++) {
         for (size_t j = i + 1; j < permutation.size(); j++) {
-            // Determine the two faculties in the pair, get the upper triangle of the matrix since we have data there
+            // Calculate faculties in pair (i, j)
             const int faculty_1 = std::min(permutation[i], permutation[j]);
             const int faculty_2 = std::max(permutation[i], permutation[j]);
-            // Get the weight between the two faculties
+            // Get the weight between the two faculties from the matrix
             const unsigned long long weight = weights_matrix[faculty_1][faculty_2];
 
-            // Calculate the distance between the two faculties
+            // Calculate distance between faculties in the permutation
             int distance = (faculty_sizes[faculty_1] + faculty_sizes[faculty_2]) / 2;
             for (size_t k = i + 1; k < j; ++k) {
                 distance += faculty_sizes[permutation[k]];
             }
-            // Add the weighted distance to the total cost
+
+            // Add weighted distance to the total cost
             cost += weight * distance;
         }
     }
     return cost;
 }
 
-
 /**
- * Worker function for the branch and bound algorithm.
+ * Evaluate a range of permutations to find the lowest-cost solution.
  *
- * This function evaluates a subset of permutations to find the local best cost and permutation.
- * It is designed to be run in parallel by multiple threads.
+ * This worker function is part of a parallelized Branch and Bound algorithm.
+ * Each thread processes a subset of permutations and stores the best local result.
  *
- * @param faculties_sizes The sizes of the faculties.
- * @param weights_matrix The matrix containing the weights of the edges between the faculties.
- * @param permutations The list of all permutations to evaluate.
- * @param local_best_cost Reference to store the local best cost found by this worker.
- * @param local_best_permutation Reference to store the local best permutation found by this worker.
- * @param start The starting index of the subset of permutations to evaluate.
- * @param end The ending index of the subset of permutations to evaluate.
+ * @param faculties_sizes A vector of faculty sizes.
+ * @param weights_matrix A square matrix representing weights between faculties.
+ * @param permutations A list of permutations to evaluate.
+ * @param local_best_cost A reference to store the best cost found by this worker.
+ * @param local_best_permutation A reference to store the best permutation found by this worker.
+ * @param start The index to start evaluating permutations from.
+ * @param end The index to stop evaluating permutations.
  */
 void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
                              const std::vector<std::vector<int> > &weights_matrix,
@@ -96,10 +94,10 @@ void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
                              std::vector<int> &local_best_permutation,
                              const size_t start,
                              const size_t end) {
-    // Initialize the local best cost to the maximum possible value
+    // Initialize the best cost as maximum possible value
     local_best_cost = std::numeric_limits<unsigned long long>::max();
 
-    // Iterate over the subset of permutations
+    // Evaluate each permutation in the assigned range
     for (size_t i = start; i < end; ++i) {
         // Calculate the cost of the current permutation
         const unsigned long long cost = calculate_cost(permutations[i], weights_matrix, faculties_sizes);
@@ -111,32 +109,31 @@ void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
     }
 }
 
-
 /**
- * Branch and Bound algorithm to solve the Single Row Facility Layout Problem (SRFLP).
+ * Perform Branch and Bound to solve the Single Row Facility Layout Problem (SRFLP).
  *
- * This function generates all permutations of the given faculties, divides the work among multiple threads,
- * and finds the permutation with the minimum cost using the Branch and Bound method.
+ * This function generates all permutations of faculties and uses multi-threading
+ * to divide the workload. It searches for the permutation with the lowest cost.
  *
- * @param faculties_sizes The sizes of the faculties.
- * @param weights_matrix The matrix containing the weights of the edges between the faculties.
+ * @param faculties_sizes A vector representing the size of each faculty.
+ * @param weights_matrix A square matrix representing weights between faculties.
  */
 void branch_and_bound(const std::vector<int> &faculties_sizes,
                       const std::vector<std::vector<int> > &weights_matrix) {
-    // Initialize the base permutation with indices 0 to n-1
+    // Initialize the base permutation (0 to n-1)
     std::vector<int> base_permutation(faculties_sizes.size());
     for (int i = 0; i < base_permutation.size(); ++i) {
         base_permutation[i] = i;
     }
 
-    // Generate all permutations of the base permutations
+    // Generate all permutations
     std::vector<std::vector<int> > all_permutations;
     all_permutations.push_back(base_permutation);
     while (std::ranges::next_permutation(base_permutation).found) {
         all_permutations.push_back(base_permutation);
     }
 
-    // Initialize the best cost and best permutation to the maximum possible value
+    // Initialize the global best cost
     unsigned long long best_cost = std::numeric_limits<unsigned long long>::max();
     std::vector<int> best_permutation;
 
@@ -153,7 +150,7 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
     std::vector<unsigned long long> local_costs(number_of_threads);
     std::vector<std::vector<int> > local_permutations(number_of_threads);
 
-    // Launch threads to process chunks of permutations
+    // Launch threads to evaluate subsets of permutations
     for (size_t i = 0; i < number_of_threads; i++) {
         const size_t start = i * chunk_size;
         size_t end;
@@ -171,14 +168,14 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
                              std::ref(local_permutations[i]),
                              start,
                              end);
-    };
+    }
 
     // Wait for all threads to complete
     for (auto &thread: threads) {
         thread.join();
     }
 
-    // Find the best cost and permutation among all threads
+    // Find the best result across all threads
     for (size_t i = 0; i < number_of_threads; ++i) {
         if (local_costs[i] < best_cost) {
             best_cost = local_costs[i];
@@ -186,7 +183,6 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
         }
     }
 
-    // Output the best cost and permutation
     std::cout << "Best cost: " << best_cost << std::endl;
     std::cout << "Best permutation: ";
     for (const int faculty: best_permutation) {
@@ -203,7 +199,6 @@ int main() {
     }
 
     int number_of_rows = std::stoi(data[0]);
-
     std::vector<int> faculties_sizes;
     std::istringstream sizes_stream(data[1]);
     int size;
