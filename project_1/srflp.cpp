@@ -122,8 +122,8 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
                       const std::vector<std::vector<int> > &weights_matrix) {
     // Initialize the base permutation (0 to n-1)
     std::vector<int> base_permutation(faculties_sizes.size());
-    for (int i = 0; i < base_permutation.size(); ++i) {
-        base_permutation[i] = i;
+    for (std::vector<int>::size_type i = 0; i < base_permutation.size(); ++i) {
+        base_permutation[i] = static_cast<int>(i);
     }
 
     // Generate all permutations
