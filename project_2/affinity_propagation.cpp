@@ -73,14 +73,14 @@ std::vector<std::string> read_csv_file(const std::string &filename) {
     return data;
 }
 
-std::vector<std::vector<long> > tokenize_csv(const std::vector<std::string> &data) {
-    std::vector<std::vector<long> > result;
+std::vector<std::vector<int> > tokenize_csv(const std::vector<std::string> &data) {
+    std::vector<std::vector<int> > result;
     for (const std::string &line: data) {
-        std::vector<long> row;
+        std::vector<int> row;
         std::string token;
         std::istringstream tokenStream(line);
         while (std::getline(tokenStream, token, ',')) {
-            row.push_back(std::stol(token));
+            row.push_back(std::stoi(token));
         }
         result.push_back(row);
     }
@@ -95,11 +95,11 @@ int main() {
 
     const std::vector<std::string> five_participant_dataset = read_csv_file("../project_2/five_participants.csv");
 
-    const std::vector<std::vector<long> > mnist_matrix = tokenize_csv(mnist_dataset);
-    const std::vector<std::vector<long> > five_participant_matrix = tokenize_csv(five_participant_dataset);
+    const std::vector<std::vector<int> > mnist_matrix = tokenize_csv(mnist_dataset);
+    const std::vector<std::vector<int> > five_participant_matrix = tokenize_csv(five_participant_dataset);
 
     std::cout << "First row of five participant matrix: ";
-    for (const long element: five_participant_matrix[0]) {
+    for (const int element: five_participant_matrix[0]) {
         std::cout << element << " ";
     }
 
@@ -107,7 +107,7 @@ int main() {
             << std::endl;
 
     std::cout << "Second row of five participant matrix: ";
-    for (const long element: five_participant_matrix[1]) {
+    for (const int element: five_participant_matrix[1]) {
         std::cout << element << " ";
     }
 
@@ -115,7 +115,7 @@ int main() {
         0] << std::endl;
 
     std::cout << "First row of mnist matrix: ";
-    for (const long element: mnist_matrix[0]) {
+    for (const int element: mnist_matrix[0]) {
         std::cout << element << " ";
     }
 
