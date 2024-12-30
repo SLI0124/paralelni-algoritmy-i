@@ -52,14 +52,33 @@ std::vector<std::string> merge_two_csv(const std::string &filename1, const std::
     return result;
 }
 
+std::vector<std::string> read_csv_file(const std::string &filename) {
+    std::vector<std::string> data;
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open the file " << filename << std::endl;
+        return data;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        data.push_back(line);
+    }
+    file.close();
+
+    return data;
+}
 
 int main() {
     const std::string mnist_file_train = "../project_2/mnist/mnist_train.csv";
     const std::string mnist_file_test = "../project_2/mnist/mnist_test.csv";
     const std::vector<std::string> mnist_dataset = merge_two_csv(mnist_file_train, mnist_file_test);
 
+    const std::vector<std::string> five_participant_dataset = read_csv_file("../project_2/five_participants.csv");
+
     std::cout << mnist_dataset[0] << std::endl << std::endl << mnist_dataset[1] << std::endl << std::endl << std::endl;
 
+    std::cout << five_participant_dataset[0] << std::endl << std::endl << five_participant_dataset[1] << std::endl;
 
     return 0;
 }
