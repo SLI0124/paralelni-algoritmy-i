@@ -58,8 +58,8 @@ Na základě popisu Affinity Propagation můžeme zformulovat následující zad
 
 Implementujte paralelní řešení Affinity Propagation (na
 datasetu [MNIST](https://homel.vsb.cz/~kro080/PAI-2024/U2/archive.zip)). Popis datasetu najdete
-např. [zde](https://paperswithcode.com/dataset/mnist) (
-original) nebo [zde](https://www.kaggle.com/datasets/oddrationale/mnist-in-csv) (jednodušší formát). Cílem úkolu není
+např. [zde](https://paperswithcode.com/dataset/mnist) (original)
+nebo [zde](https://www.kaggle.com/datasets/oddrationale/mnist-in-csv) (jednodušší formát). Cílem úkolu není
 naučit se shlukovat MNIST podle skutečných tříd, ale testovat
 paralelní implementaci. Label třídy tedy pro potřeby shlukování můžeme ignorovat. Lze na něm ověřit, kolik algoritmus
 najde shluků a jak správně objekty přiřadí.
