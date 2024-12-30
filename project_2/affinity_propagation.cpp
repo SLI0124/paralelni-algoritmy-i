@@ -70,7 +70,8 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
             double similarity = 0;
 
             for (int k = 0; k < data[i].size(); k++) {
-                similarity += (data[i][k] == data[j][k]);
+                const double difference = data[i][k] - data[j][k];
+                similarity += difference * difference;
             }
             similarity = -similarity;
             minimal_similarity = std::min(minimal_similarity, similarity);
@@ -78,12 +79,13 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
         }
     }
 
-    // not sure what to set the diagonal to
+    // set diagonal to mean of minimal similarity
     for (int i = 0; i < size_n; i++) {
-        similarity_matrix[i][i] = 0;
+        similarity_matrix[i][i] = minimal_similarity;
     }
 
-    std::cout << "Minimal similarity: " << minimal_similarity << std::endl;
+    // print similarity matrix
+    print_matrix(similarity_matrix, "Similarity matrix");
 
     return similarity_matrix;
 }
