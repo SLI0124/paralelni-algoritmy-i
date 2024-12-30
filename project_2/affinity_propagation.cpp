@@ -22,9 +22,8 @@ std::vector<std::string> merge_two_csv(const std::string &filename1, const std::
 
     std::string line;
 
-    // Read the header from file1
+    // skip the header from file1
     std::getline(file1, line);
-    data_file1.push_back(line);
 
     // Read the rest of file1
     while (std::getline(file1, line)) {
@@ -61,6 +60,10 @@ std::vector<std::string> read_csv_file(const std::string &filename) {
     }
 
     std::string line;
+
+    // skip the header
+    std::getline(file, line);
+
     while (std::getline(file, line)) {
         data.push_back(line);
     }
@@ -76,9 +79,9 @@ int main() {
 
     const std::vector<std::string> five_participant_dataset = read_csv_file("../project_2/five_participants.csv");
 
-    std::cout << mnist_dataset[0] << std::endl << std::endl << mnist_dataset[1] << std::endl << std::endl << std::endl;
+    std::cout << std::endl << mnist_dataset[1] << std::endl << std::endl << std::endl;
 
-    std::cout << five_participant_dataset[0] << std::endl << std::endl << five_participant_dataset[1] << std::endl;
+    std::cout << std::endl << five_participant_dataset[1] << std::endl;
 
     return 0;
 }
