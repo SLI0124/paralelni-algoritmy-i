@@ -74,30 +74,30 @@ std::vector<std::string> read_csv_file(const std::string &filename) {
     return data;
 }
 
-std::vector<std::vector<int> > tokenize_csv(const std::vector<std::string> &data) {
-    std::vector<std::vector<int> > result;
+std::vector<std::vector<double> > tokenize_csv(const std::vector<std::string> &data) {
+    std::vector<std::vector<double> > result;
     for (const std::string &line: data) {
-        std::vector<int> row;
+        std::vector<double> row;
         std::string token;
         std::istringstream tokenStream(line);
         while (std::getline(tokenStream, token, ',')) {
-            row.push_back(std::stoi(token));
+            row.push_back(std::stod(token));
         }
         result.push_back(row);
     }
     return result;
 }
 
-std::vector<std::vector<int> > calculate_similarity_matrix(const std::vector<std::vector<int> > &data) {
+std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<std::vector<double> > &data) {
     const size_t size_n = data.size();
-    const std::vector<int> row(size_n, 0);
-    std::vector<std::vector<int> > similarity_matrix(size_n, row);
+    const std::vector<double> row(size_n, 0);
+    std::vector<std::vector<double> > similarity_matrix(size_n, row);
 
-    int minimal_similarity = 0;
+    double minimal_similarity = 0;
 #pragma omp parallel for default(none) shared(data, similarity_matrix, size_n, minimal_similarity)
     for (int i = 0; i < size_n; i++) {
         for (int j = 0; j < size_n; j++) {
-            int similarity = 0;
+            double similarity = 0;
 
             for (int k = 0; k < data[i].size(); k++) {
                 similarity += (data[i][k] == data[j][k]);
@@ -118,13 +118,13 @@ std::vector<std::vector<int> > calculate_similarity_matrix(const std::vector<std
     return similarity_matrix;
 }
 
-std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<std::vector<int> > &matrix_S,
-                                                              const int max_iteration) {
+std::vector<std::vector<double> > calculate_affinity_propagation(const std::vector<std::vector<double> > &matrix_S,
+                                                                 const double max_iteration) {
     const size_t size_n = matrix_S.size();
-    const std::vector<int> row(size_n, 0);
-    auto matrix_A = std::vector<std::vector<int> >(size_n, row);
-    auto matrix_R = std::vector<std::vector<int> >(size_n, row);
-    auto matrix_C = std::vector<std::vector<int> >(size_n, row);
+    const std::vector<double> row(size_n, 0);
+    auto matrix_A = std::vector<std::vector<double> >(size_n, row);
+    auto matrix_R = std::vector<std::vector<double> >(size_n, row);
+    auto matrix_C = std::vector<std::vector<double> >(size_n, row);
 
     bool changed = true;
     long iteration = 0;
@@ -138,7 +138,7 @@ std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<
             for (int k = 0; k < size_n; k++) {
                 matrix_R[i][k] = matrix_S[i][k];
 
-                int maximum = 0;
+                double maximum = 0;
                 for (int k_ = 0; k_ < size_n; k_++) {
                     maximum = std::max(maximum, matrix_A[i][k_] + matrix_S[i][k_]);
                 }
@@ -150,7 +150,7 @@ std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<
 #pragma omp parallel for default(none) shared(matrix_A, matrix_R, matrix_C, size_n)
         for (int i = 0; i < size_n; i++) {
             for (int k = 0; k < size_n; k++) {
-                int sum_on_max = 0;
+                double sum_on_max = 0;
                 for (int i_ = 0; i_ < size_n; i_++) {
                     if (i_ != i && i_ != k) {
                         sum_on_max = std::max(sum_on_max, matrix_R[i_][k]);
@@ -159,7 +159,7 @@ std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<
                 if (i == k) {
                     matrix_A[i][k] = sum_on_max;
                 } else {
-                    matrix_A[i][k] = std::min(0, sum_on_max + matrix_R[k][k]);
+                    matrix_A[i][k] = std::min(0.0, sum_on_max + matrix_R[k][k]);
                 }
             }
         }
@@ -168,8 +168,8 @@ std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<
 #pragma omp parallel for default(none) shared(matrix_A, matrix_R, matrix_C, size_n)
         for (int i = 0; i < size_n; i++) {
             for (int k = 0; k < size_n; k++) {
-                const int new_value = matrix_A[i][k] + matrix_R[i][k];
-                const int old_value = matrix_C[i][k];
+                const double new_value = matrix_A[i][k] + matrix_R[i][k];
+                const double old_value = matrix_C[i][k];
                 changed = changed || (new_value != old_value);
                 matrix_C[i][k] = new_value;
             }
@@ -178,17 +178,17 @@ std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<
     return matrix_C;
 }
 
-void create_clusters(const std::vector<std::vector<int> > &matrix_C) {
+void create_clusters(const std::vector<std::vector<double> > &matrix_C) {
     const size_t size_n = matrix_C.size();
 
     for (size_t i = 0; i < size_n; i++) {
-        int max_value = INT_MIN;
-        int max_index = -1;
+        double max_value = INT_MIN;
+        double max_index = -1;
 
         for (size_t j = 0; j < matrix_C[i].size(); j++) {
             if (matrix_C[i][j] > max_value) {
                 max_value = matrix_C[i][j];
-                max_index = static_cast<int>(j);
+                max_index = static_cast<double>(j);
             }
         }
 
@@ -208,10 +208,10 @@ int main() {
 
     const std::vector<std::string> five_participant_dataset = read_csv_file(
         "../project_2/five_participants.csv");
-    const std::vector<std::vector<int> > five_participant_matrix = tokenize_csv(five_participant_dataset);
+    const std::vector<std::vector<double> > five_participant_matrix = tokenize_csv(five_participant_dataset);
     create_clusters(five_participant_matrix);
 
-    const std::vector<std::vector<int> > mnist_matrix = tokenize_csv(mnist_dataset);
+    const std::vector<std::vector<double> > mnist_matrix = tokenize_csv(mnist_dataset);
     create_clusters(mnist_matrix);
 
 
