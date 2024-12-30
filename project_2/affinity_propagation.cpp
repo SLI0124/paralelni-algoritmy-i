@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 std::vector<std::string> merge_two_csv(const std::string &filename1, const std::string &filename2) {
     std::vector<std::string> data_file1;
@@ -87,39 +88,131 @@ std::vector<std::vector<int> > tokenize_csv(const std::vector<std::string> &data
     return result;
 }
 
+std::vector<std::vector<int> > calculate_similarity_matrix(const std::vector<std::vector<int> > &data) {
+    const size_t size_n = data.size();
+    const std::vector<int> row(size_n, 0);
+    std::vector<std::vector<int> > similarity_matrix(size_n, row);
+
+    int minimal_similarity = 0;
+#pragma omp parallel for default(none) shared(data, similarity_matrix, size_n, minimal_similarity)
+    for (int i = 0; i < size_n; i++) {
+        for (int j = 0; j < size_n; j++) {
+            int similarity = 0;
+
+            for (int k = 0; k < data[i].size(); k++) {
+                similarity += (data[i][k] == data[j][k]);
+            }
+            similarity = -similarity;
+            minimal_similarity = std::min(minimal_similarity, similarity);
+            similarity_matrix[i][j] = similarity;
+        }
+    }
+
+    // not sure what to set the diagonal to
+    for (int i = 0; i < size_n; i++) {
+        similarity_matrix[i][i] = 0;
+    }
+
+    std::cout << "Minimal similarity: " << minimal_similarity << std::endl;
+
+    return similarity_matrix;
+}
+
+std::vector<std::vector<int> > calculate_affinity_propagation(const std::vector<std::vector<int> > &matrix_S,
+                                                              const int max_iteration) {
+    const size_t size_n = matrix_S.size();
+    const std::vector<int> row(size_n, 0);
+    auto matrix_A = std::vector<std::vector<int> >(size_n, row);
+    auto matrix_R = std::vector<std::vector<int> >(size_n, row);
+    auto matrix_C = std::vector<std::vector<int> >(size_n, row);
+
+    bool changed = true;
+    long iteration = 0;
+
+    while (changed && iteration < max_iteration) {
+        iteration++;
+
+        // Calculate responsibility matrix
+#pragma omp parallel for default(none) shared(matrix_A, matrix_S, matrix_R, size_n)
+        for (int i = 0; i < size_n; i++) {
+            for (int k = 0; k < size_n; k++) {
+                matrix_R[i][k] = matrix_S[i][k];
+
+                int maximum = 0;
+                for (int k_ = 0; k_ < size_n; k_++) {
+                    maximum = std::max(maximum, matrix_A[i][k_] + matrix_S[i][k_]);
+                }
+                matrix_R[i][k] -= maximum;
+            }
+        }
+
+        // Calculate availability matrix
+#pragma omp parallel for default(none) shared(matrix_A, matrix_R, matrix_C, size_n)
+        for (int i = 0; i < size_n; i++) {
+            for (int k = 0; k < size_n; k++) {
+                int sum_on_max = 0;
+                for (int i_ = 0; i_ < size_n; i_++) {
+                    if (i_ != i && i_ != k) {
+                        sum_on_max = std::max(sum_on_max, matrix_R[i_][k]);
+                    }
+                }
+                if (i == k) {
+                    matrix_A[i][k] = sum_on_max;
+                } else {
+                    matrix_A[i][k] = std::min(0, sum_on_max + matrix_R[k][k]);
+                }
+            }
+        }
+
+        // Calculate C matrix
+#pragma omp parallel for default(none) shared(matrix_A, matrix_R, matrix_C, size_n)
+        for (int i = 0; i < size_n; i++) {
+            for (int k = 0; k < size_n; k++) {
+                const int new_value = matrix_A[i][k] + matrix_R[i][k];
+                const int old_value = matrix_C[i][k];
+                changed = changed || (new_value != old_value);
+                matrix_C[i][k] = new_value;
+            }
+        }
+    }
+    return matrix_C;
+}
+
+void create_clusters(const std::vector<std::vector<int> > &matrix_C) {
+    const size_t size_n = matrix_C.size();
+
+    for (size_t i = 0; i < size_n; i++) {
+        int max_value = INT_MIN;
+        int max_index = -1;
+
+        for (size_t j = 0; j < matrix_C[i].size(); j++) {
+            if (matrix_C[i][j] > max_value) {
+                max_value = matrix_C[i][j];
+                max_index = static_cast<int>(j);
+            }
+        }
+
+
+        if (max_index != -1) {
+            std::cout << "Row " << i << " belongs to cluster " << max_index << std::endl;
+        } else {
+            std::cout << "Row " << i << " has no valid cluster." << std::endl;
+        }
+    }
+}
 
 int main() {
     const std::string mnist_file_train = "../project_2/mnist/mnist_train.csv";
     const std::string mnist_file_test = "../project_2/mnist/mnist_test.csv";
     const std::vector<std::string> mnist_dataset = merge_two_csv(mnist_file_train, mnist_file_test);
 
-    const std::vector<std::string> five_participant_dataset = read_csv_file("../project_2/five_participants.csv");
+    const std::vector<std::string> five_participant_dataset = read_csv_file(
+        "../project_2/five_participants.csv");
+    const std::vector<std::vector<int> > five_participant_matrix = tokenize_csv(five_participant_dataset);
+    create_clusters(five_participant_matrix);
 
     const std::vector<std::vector<int> > mnist_matrix = tokenize_csv(mnist_dataset);
-    const std::vector<std::vector<int> > five_participant_matrix = tokenize_csv(five_participant_dataset);
-
-    std::cout << "First row of five participant matrix: ";
-    for (const int element: five_participant_matrix[0]) {
-        std::cout << element << " ";
-    }
-
-    std::cout << std::endl << "First element of first row of five participant matrix: " << five_participant_matrix[0][0]
-            << std::endl;
-
-    std::cout << "Second row of five participant matrix: ";
-    for (const int element: five_participant_matrix[1]) {
-        std::cout << element << " ";
-    }
-
-    std::cout << std::endl << "First element of second row of five participant matrix: " << five_participant_matrix[1][
-        0] << std::endl;
-
-    std::cout << "First row of mnist matrix: ";
-    for (const int element: mnist_matrix[0]) {
-        std::cout << element << " ";
-    }
-
-    std::cout << std::endl << "First element of first row of mnist matrix: " << mnist_matrix[0][0] << std::endl;
+    create_clusters(mnist_matrix);
 
 
     return 0;
