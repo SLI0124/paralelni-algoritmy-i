@@ -75,6 +75,20 @@ unsigned long long calculate_cost(const std::vector<int> &permutation,
 }
 
 
+/**
+ * Worker function for the branch and bound algorithm.
+ *
+ * This function evaluates a subset of permutations to find the local best cost and permutation.
+ * It is designed to be run in parallel by multiple threads.
+ *
+ * @param faculties_sizes The sizes of the faculties.
+ * @param weights_matrix The matrix containing the weights of the edges between the faculties.
+ * @param permutations The list of all permutations to evaluate.
+ * @param local_best_cost Reference to store the local best cost found by this worker.
+ * @param local_best_permutation Reference to store the local best permutation found by this worker.
+ * @param start The starting index of the subset of permutations to evaluate.
+ * @param end The ending index of the subset of permutations to evaluate.
+ */
 void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
                              const std::vector<std::vector<int> > &weights_matrix,
                              const std::vector<std::vector<int> > &permutations,
@@ -82,10 +96,14 @@ void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
                              std::vector<int> &local_best_permutation,
                              const size_t start,
                              const size_t end) {
+    // Initialize the local best cost to the maximum possible value
     local_best_cost = std::numeric_limits<unsigned long long>::max();
 
+    // Iterate over the subset of permutations
     for (size_t i = start; i < end; ++i) {
+        // Calculate the cost of the current permutation
         const unsigned long long cost = calculate_cost(permutations[i], weights_matrix, faculties_sizes);
+        // If the current cost is lower than the local best cost, update the local best cost and permutation
         if (cost < local_best_cost) {
             local_best_cost = cost;
             local_best_permutation = permutations[i];
@@ -94,22 +112,35 @@ void branch_and_bound_worker(const std::vector<int> &faculties_sizes,
 }
 
 
+/**
+ * Branch and Bound algorithm to solve the Single Row Facility Layout Problem (SRFLP).
+ *
+ * This function generates all permutations of the given faculties, divides the work among multiple threads,
+ * and finds the permutation with the minimum cost using the Branch and Bound method.
+ *
+ * @param faculties_sizes The sizes of the faculties.
+ * @param weights_matrix The matrix containing the weights of the edges between the faculties.
+ */
 void branch_and_bound(const std::vector<int> &faculties_sizes,
                       const std::vector<std::vector<int> > &weights_matrix) {
+    // Initialize the base permutation with indices 0 to n-1
     std::vector<int> base_permutation(faculties_sizes.size());
     for (int i = 0; i < base_permutation.size(); ++i) {
         base_permutation[i] = i;
     }
 
+    // Generate all permutations of the base permutations
     std::vector<std::vector<int> > all_permutations;
     all_permutations.push_back(base_permutation);
     while (std::ranges::next_permutation(base_permutation).found) {
         all_permutations.push_back(base_permutation);
     }
 
+    // Initialize the best cost and best permutation to the maximum possible value
     unsigned long long best_cost = std::numeric_limits<unsigned long long>::max();
     std::vector<int> best_permutation;
 
+    // Determine the number of threads to use based on the hardware concurrency
     const size_t number_of_threads = std::thread::hardware_concurrency();
     std::cout << "Number of threads: " << number_of_threads << std::endl;
     const size_t total_permutations = all_permutations.size();
@@ -117,10 +148,12 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
     const size_t chunk_size = total_permutations / number_of_threads;
     std::cout << "Chunk size: " << chunk_size << std::endl;
 
+    // Create vectors to store threads, local costs, and local permutations
     std::vector<std::thread> threads;
     std::vector<unsigned long long> local_costs(number_of_threads);
     std::vector<std::vector<int> > local_permutations(number_of_threads);
 
+    // Launch threads to process chunks of permutations
     for (size_t i = 0; i < number_of_threads; i++) {
         const size_t start = i * chunk_size;
         size_t end;
@@ -140,10 +173,12 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
                              end);
     };
 
+    // Wait for all threads to complete
     for (auto &thread: threads) {
         thread.join();
     }
 
+    // Find the best cost and permutation among all threads
     for (size_t i = 0; i < number_of_threads; ++i) {
         if (local_costs[i] < best_cost) {
             best_cost = local_costs[i];
@@ -151,6 +186,7 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
         }
     }
 
+    // Output the best cost and permutation
     std::cout << "Best cost: " << best_cost << std::endl;
     std::cout << "Best permutation: ";
     for (const int faculty: best_permutation) {
