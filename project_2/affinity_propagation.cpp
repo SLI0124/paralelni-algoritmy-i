@@ -259,19 +259,7 @@ int main() {
         five_participants_similarity_matrix, max_iteration, verbose);
     create_clusters(five_participants_clusters);
 
-
-    // Iris dataset
-    // verbose = false;
-    // const std::string iris_file = "../project_2/iris.csv";
-    // const std::vector<std::string> iris_dataset = read_csv_file(iris_file);
-    // const std::vector<std::vector<double> > iris_matrix = tokenize_csv(iris_dataset, ';');
-    // const std::vector<std::vector<double> > iris_similarity_matrix = calculate_similarity_matrix(iris_matrix, verbose);
-    // const std::vector<std::vector<double> > iris_clusters = calculate_affinity_propagation(iris_similarity_matrix,
-    //     max_iteration, verbose);
-    // create_clusters(iris_clusters);
-
-
-    // MNIST test dataset
+    // MNIST test dataset, it's way too big so it takes ages (it did not finish on my machine), uncomment on your own risk
     // verbose = false;
     // const std::string mnist_file_test = "../project_2/mnist_test.csv";
     // const std::vector<std::string> mnist_test_dataset = read_csv_file(mnist_file_test);
