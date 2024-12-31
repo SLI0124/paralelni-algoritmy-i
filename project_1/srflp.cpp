@@ -188,6 +188,7 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
     for (const int faculty: best_permutation) {
         std::cout << faculty << " ";
     }
+    std::cout << std::endl;
 }
 
 int main() {
