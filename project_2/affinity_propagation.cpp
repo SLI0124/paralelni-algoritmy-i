@@ -93,7 +93,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
 
 
 std::vector<std::vector<double> > calculate_affinity_propagation(const std::vector<std::vector<double> > &matrix_S,
-                                                                 const double max_iteration) {
+                                                                 const int max_iteration) {
     const size_t size_n = matrix_S.size();
     const std::vector<double> row(size_n, 0);
     auto matrix_A = std::vector<std::vector<double> >(size_n, row);
@@ -101,7 +101,7 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
     auto matrix_C = std::vector<std::vector<double> >(size_n, row);
 
     bool changed = true;
-    double iteration = 0;
+    int iteration = 0;
 
     while (changed && iteration < max_iteration) {
         iteration++;
@@ -180,7 +180,7 @@ void create_clusters(const std::vector<std::vector<double> > &matrix_C) {
 }
 
 int main() {
-    int max_iteration = 1000;
+    constexpr int max_iteration = 1000;
 
     // five participants
     const std::string five_participant_file = "../project_2/five_participants.csv";
