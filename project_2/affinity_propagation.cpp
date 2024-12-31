@@ -120,7 +120,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
     if (verbose) {
         print_matrix(similarity_matrix, "Similarity matrix");
     }
-    std::cout << "Similarity matrix calculated" << std::endl;
+    std::cout << "Similarity matrix calculated" << std::endl << std::endl;
 
     return similarity_matrix;
 }
