@@ -111,14 +111,20 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
         for (size_t i = 0; i < size_n; i++) {
             for (size_t k = 0; k < size_n; k++) {
                 double max_val = -std::numeric_limits<double>::infinity();
+
+                // Find max over all k' != k
                 for (size_t k_ = 0; k_ < size_n; k_++) {
                     if (k_ != k) {
-                        max_val = std::max(max_val, matrix_A[i][k_] + matrix_S[i][k_]);
+                        double value = matrix_A[i][k_] + matrix_S[i][k_];
+                        max_val = std::max(max_val, value);
                     }
                 }
+
+                // Update the responsibility matrix
                 matrix_R[i][k] = matrix_S[i][k] - max_val;
             }
         }
+        print_matrix(matrix_R, "Responsibility Matrix after iteration " + std::to_string(iteration));
 
         // Calculate availability matrix
 #pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_R, size_n)
