@@ -65,7 +65,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
     std::vector<std::vector<double> > similarity_matrix(size_n, row);
 
     double minimal_similarity = 0;
-#pragma omp parallel for default(none) shared(data, similarity_matrix, size_n, minimal_similarity)
+#pragma omp parallel for collapse(2) default(none) shared(data, similarity_matrix, size_n, minimal_similarity)
     for (size_t i = 0; i < size_n; i++) {
         for (size_t j = 0; j < size_n; j++) {
             double similarity = 0;
@@ -91,6 +91,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
     return similarity_matrix;
 }
 
+
 std::vector<std::vector<double> > calculate_affinity_propagation(const std::vector<std::vector<double> > &matrix_S,
                                                                  const double max_iteration) {
     const size_t size_n = matrix_S.size();
@@ -109,19 +110,13 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
 #pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_S, matrix_R, size_n)
         for (size_t i = 0; i < size_n; i++) {
             for (size_t k = 0; k < size_n; k++) {
-                // S(i,k) part -> initialize R(i,k) with S(i,k)
-                matrix_R[i][k] = matrix_S[i][k];
-
-                // minus part
-                double maximum = std::numeric_limits<double>::min();
+                double max_val = -std::numeric_limits<double>::infinity();
                 for (size_t k_ = 0; k_ < size_n; k_++) {
                     if (k_ != k) {
-                        // max part of the equation -> max(A(i,k') + S(i,k'))
-                        maximum = std::max(maximum, matrix_A[i][k_] + matrix_S[i][k_]);
+                        max_val = std::max(max_val, matrix_A[i][k_] + matrix_S[i][k_]);
                     }
                 }
-                // R(i,k) = S(i,k) - max part; we already did S(i,k) part, now we subtract max part
-                matrix_R[i][k] -= maximum;
+                matrix_R[i][k] = matrix_S[i][k] - max_val;
             }
         }
 
