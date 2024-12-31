@@ -172,10 +172,10 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
         print_matrix(matrix_C, "Combined Matrix after iteration " + std::to_string(iteration));
     }
 
-    // print all matrices
-    print_matrix(matrix_R, "R matrix");
-    print_matrix(matrix_A, "A matrix");
-    print_matrix(matrix_C, "C matrix");
+    // Print all matrices
+    print_matrix(matrix_R, "Final Responsibility Matrix");
+    print_matrix(matrix_A, "Final Availability Matrix");
+    print_matrix(matrix_C, "Final Combined Matrix");
 
     return matrix_C;
 }
