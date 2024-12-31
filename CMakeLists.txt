@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.27)
 project(paralelni-algoritmy-i)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable OpenMP if available
-find_package(OpenMP 3.0 REQUIRED)
+find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
     message(STATUS "OpenMP found, enabling parallelization.")
 else ()
