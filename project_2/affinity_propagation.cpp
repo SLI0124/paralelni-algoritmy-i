@@ -68,7 +68,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
     std::vector<std::vector<double> > similarity_matrix(size_n, row);
 
     double minimal_similarity = 0;
-#pragma omp parallel for collapse(2) default(none) shared(data, similarity_matrix, size_n, minimal_similarity)
+#pragma omp parallel for collapse(2) default(none) shared(data, similarity_matrix, size_n) reduction(min: minimal_similarity)
     for (size_t i = 0; i < size_n; i++) {
         for (size_t j = 0; j < size_n; j++) {
             double similarity = 0;
@@ -92,7 +92,7 @@ std::vector<std::vector<double> > calculate_similarity_matrix(const std::vector<
     if (verbose) {
         print_matrix(similarity_matrix, "Similarity matrix");
     }
-
+    std::cout << "Similarity matrix calculated" << std::endl;
 
     return similarity_matrix;
 }
@@ -110,6 +110,7 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
     int iteration = 0;
 
     while (changed && iteration < max_iteration) {
+        std::cout << "Iteration " << iteration << " out of " << max_iteration << std::endl;
         iteration++;
 
         // Calculate responsibility matrix
@@ -170,12 +171,16 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
 
         // Calculate combined matrix C
         changed = false;
-#pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_R, matrix_C, size_n, changed)
+#pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_R, matrix_C, size_n) reduction(||: changed)
         for (size_t i = 0; i < size_n; i++) {
             for (size_t k = 0; k < size_n; k++) {
                 const double new_value = matrix_A[i][k] + matrix_R[i][k];
                 const double old_value = matrix_C[i][k];
-                changed = changed || (new_value != old_value);
+
+                if (new_value != old_value) {
+                    changed = true;
+                }
+
                 matrix_C[i][k] = new_value;
             }
         }
@@ -184,7 +189,7 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
         }
 
         if (iteration == 1 && verbose) {
-            // in assigment is this matrix used so we will satisfy the correct result
+            // in assignment is this matrix used so we will satisfy the correct result
             create_clusters(matrix_C);
         }
     }
@@ -241,7 +246,7 @@ void create_clusters(const std::vector<std::vector<double> > &matrix_C) {
 
 
 int main() {
-    constexpr int max_iteration = 1000;
+    constexpr int max_iteration = 100;
 
     // five participants
     bool verbose = true;
@@ -267,11 +272,15 @@ int main() {
 
 
     // MNIST test dataset
+    // verbose = false;
     // const std::string mnist_file_test = "../project_2/mnist_test.csv";
     // const std::vector<std::string> mnist_test_dataset = read_csv_file(mnist_file_test);
     // const std::vector<std::vector<double> > mnist_test_matrix = tokenize_csv(mnist_test_dataset);
     // const std::vector<std::vector<double> > mnist_test_similarity_matrix = calculate_similarity_matrix(
-    //     mnist_test_matrix);
+    //     mnist_test_matrix, verbose);
+    // const std::vector<std::vector<double> > mnist_test_clusters = calculate_affinity_propagation(
+    //     mnist_test_similarity_matrix, max_iteration, verbose);
+    // create_clusters(mnist_test_clusters);
 
 
     return 0;
