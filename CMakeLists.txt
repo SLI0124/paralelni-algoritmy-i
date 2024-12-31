@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable OpenMP if available
-find_package(OpenMP 3.0 REQUIRED)
+find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
     message(STATUS "OpenMP found, enabling parallelization.")
 else ()
