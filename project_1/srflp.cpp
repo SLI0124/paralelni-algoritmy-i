@@ -129,7 +129,7 @@ void branch_and_bound(const std::vector<int> &faculties_sizes,
     // Generate all permutations
     std::vector<std::vector<int> > all_permutations;
     all_permutations.push_back(base_permutation);
-    while (std::ranges::next_permutation(base_permutation).found) {
+    while (std::next_permutation(base_permutation.begin(), base_permutation.end())) {
         all_permutations.push_back(base_permutation);
     }
 
