@@ -130,21 +130,35 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
 #pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_R, size_n)
         for (size_t i = 0; i < size_n; i++) {
             for (size_t k = 0; k < size_n; k++) {
-                double sum_on_max = 0;
-                for (size_t i_ = 0; i_ < size_n; i_++) {
-                    if (i_ != i) {
-                        sum_on_max += std::max(0.0, matrix_R[i_][k]);
+                if (i != k) {
+                    double sum = 0;
+
+                    // Sum over all i' != i, i' != k
+                    for (size_t i_ = 0; i_ < size_n; i_++) {
+                        if (i_ != i && i_ != k) {
+                            sum += std::max(0.0, matrix_R[i_][k]);
+                        }
                     }
+
+                    // Off-diagonal elements
+                    matrix_A[i][k] = std::min(0.0, matrix_R[k][k] + sum);
                 }
+
+                // Diagonal elements (i == k)
                 if (i == k) {
-                    matrix_A[i][k] = sum_on_max;
-                } else {
-                    matrix_A[i][k] = std::min(0.0, sum_on_max + matrix_R[k][k]);
+                    double sum = 0;
+                    for (size_t i_ = 0; i_ < size_n; i_++) {
+                        if (i_ != k) {
+                            sum += std::max(0.0, matrix_R[i_][k]);
+                        }
+                    }
+                    matrix_A[k][k] = sum;
                 }
             }
         }
+        print_matrix(matrix_A, "Availability Matrix after iteration " + std::to_string(iteration));
 
-        // Calculate C matrix
+        // Calculate combined matrix C
         changed = false;
 #pragma omp parallel for collapse(2) default(none) shared(matrix_A, matrix_R, matrix_C, size_n, changed)
         for (size_t i = 0; i < size_n; i++) {
@@ -155,6 +169,7 @@ std::vector<std::vector<double> > calculate_affinity_propagation(const std::vect
                 matrix_C[i][k] = new_value;
             }
         }
+        print_matrix(matrix_C, "Combined Matrix after iteration " + std::to_string(iteration));
     }
 
     // print all matrices
