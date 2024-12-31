@@ -6,11 +6,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable OpenMP if available
-find_package(OpenMP)
+find_package(OpenMP REQUIRED CXX)
+
+# Check if OpenMP is found
 if (OpenMP_CXX_FOUND)
     message(STATUS "OpenMP found, enabling parallelization.")
+
+    # Print the _OPENMP version for debugging
+    add_definitions(-DOPENMP_VERSION=${_OPENMP})
+    message(STATUS "Detected OpenMP version: ${_OPENMP}")
+
+    # Check if OpenMP version is 3.0 or higher
+    if (_OPENMP LESS 200805)
+        message(FATAL_ERROR "OpenMP version 3.0 or higher is required, but found version ${_OPENMP}.")
+    endif ()
+
 else ()
-    message(WARNING "OpenMP not found, parallelization will be disabled.")
+    message(FATAL_ERROR "OpenMP not found.")
 endif ()
 
 # Add executables
