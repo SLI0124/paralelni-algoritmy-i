@@ -1,0 +1,10 @@
+# Directed graph (each unordered pair of nodes is saved once): web-BerkStan.txt 
+# Berkely-Stanford web graph from 2002
+# Nodes: 685230 Edges: 7600595
+# FromNodeId	ToNodeId
+0   1
+0   2
+0   3
+1   2
+2   0
+3   1
