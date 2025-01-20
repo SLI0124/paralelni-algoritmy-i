@@ -6,6 +6,12 @@
 #include <unordered_map>
 #include <sstream>
 #include <chrono>
+#include <cmath>
+#include <algorithm>
+
+#define DAMPING_FACTOR 0.85
+#define EPSILON 1e-6
+#define MAX_ITERATIONS 100
 
 struct AdjacencyList {
     std::unordered_map<int, std::vector<int> > n_minus;
@@ -96,7 +102,6 @@ AdjacencyList load_data(const std::string &filename) {
     return final_result;
 }
 
-
 size_t get_total_node_count(const AdjacencyList &all_vertices) {
     std::unordered_map<int, std::vector<int> > all_vertices_map;
 
@@ -108,6 +113,90 @@ size_t get_total_node_count(const AdjacencyList &all_vertices) {
     }
 
     return all_vertices_map.size();
+}
+
+void page_rank_worker(const AdjacencyList &graph,
+                      const std::vector<double> &old_pr,
+                      std::vector<double> &new_pr,
+                      double &max_change,
+                      const size_t start,
+                      const size_t end,
+                      const double damping_factor) {
+    double local_max_change = 0.0;
+
+    for (size_t i = start; i < end; ++i) {
+        double rank_sum = 0.0;
+
+        if (auto it = graph.n_plus.find(static_cast<int>(i)); it != graph.n_plus.end()) {
+            for (int neighbor: it->second) {
+                if (auto neighbor_it = graph.n_minus.find(neighbor); neighbor_it != graph.n_minus.end()) {
+                    rank_sum += old_pr[neighbor] / static_cast<double>(neighbor_it->second.size());
+                }
+            }
+        }
+        new_pr[i] = (1.0 - damping_factor) / static_cast<double>(old_pr.size()) + damping_factor * rank_sum;
+        local_max_change = std::max(local_max_change, std::fabs(new_pr[i] - old_pr[i]));
+    }
+
+    max_change = std::max(max_change, local_max_change);
+}
+
+void page_rank(const AdjacencyList &graph,
+               const size_t total_nodes,
+               double damping_factor = DAMPING_FACTOR,
+               const double threshold = EPSILON,
+               const int max_iterations = MAX_ITERATIONS) {
+    // Initialize PageRank values
+    std::vector<double> pr(total_nodes, 1.0 / static_cast<double>(total_nodes));
+    std::vector<double> new_pr(total_nodes, 0.0);
+
+    for (int iteration = 0; iteration < max_iterations; ++iteration) {
+        std::cout << "Iteration " << iteration + 1 << std::endl;
+        double max_change = 0.0;
+        std::vector<std::thread> threads;
+        const size_t chunk_size = total_nodes / max_iterations;
+        // Spawn threads to process PageRank updates
+        for (size_t start = 0; start < total_nodes; start += chunk_size) {
+            size_t end = std::min(start + chunk_size, total_nodes);
+            threads.emplace_back(page_rank_worker,
+                                 std::cref(graph),
+                                 std::cref(pr),
+                                 std::ref(new_pr),
+                                 std::ref(max_change),
+                                 start,
+                                 end,
+                                 damping_factor);
+        }
+
+        // Join threads
+        for (auto &thread: threads) {
+            thread.join();
+        }
+
+        // Swap current and new PageRank vectors
+        pr.swap(new_pr);
+
+        // Check for convergence
+        if (max_change < threshold) {
+            std::cout << "Converged in " << iteration + 1 << " iterations." << std::endl;
+            break;
+        }
+    }
+
+    // Print top 10 nodes with highest page rank
+    std::vector<std::pair<int, double> > node_ranks;
+    for (size_t i = 0; i < pr.size(); ++i) {
+        node_ranks.emplace_back(static_cast<int>(i), pr[i]);
+    }
+
+    std::sort(node_ranks.begin(), node_ranks.end(), [](const auto &a, const auto &b) {
+        return b.second < a.second;
+    });
+
+    std::cout << "Top 10 nodes with highest PageRank:" << std::endl;
+    for (size_t i = 0; i < 10 && i < node_ranks.size(); ++i) {
+        std::cout << "Node " << node_ranks[i].first << ": " << node_ranks[i].second << std::endl;
+    }
 }
 
 
@@ -122,6 +211,8 @@ int main() {
             << "ms" << std::endl;
     const size_t total_node_count = get_total_node_count(all_vertices);
     std::cout << "Total number of nodes: " << total_node_count << std::endl;
+
+    page_rank(all_vertices, total_node_count);
 
     return 0;
 }
